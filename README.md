@@ -18,7 +18,7 @@ Examples:
 
 ### Technical details
 Written in D language. Built using DMD 2.064. Uses Pegged for parsing:
-https://github.com/PhilippeSigaud/Pegged/
+<https://github.com/PhilippeSigaud/Pegged/>
 
 ### License
 Copyright (C) 2013 Dmitry Popov, Infognition Co. Ltd.

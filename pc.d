@@ -12,20 +12,20 @@ mixin(grammar(`
               Mul      < "*" Multip
               Div      < "/" Multip
               Multip   < PrimaryN (BinOp PrimaryN)?
-			  BinOp    < "**" / "&" / "|" / "^" / "%"
+              BinOp    < "**" / "&" / "|" / "^" / "%"
               PrimaryN < Neg / Primary
               Primary  < Parens / HexNum / FloatNum / Number / FunCall / Variable
               Parens   < :"(" Expr :")"
               Neg      <- "-" Primary
               Number   < ~([0-9]+)
               FloatNum <- ~(Number "." Number)
-			  HexNum   <~ "0x" ([0-9A-Fa-f])+
+              HexNum   <~ "0x" ([0-9A-Fa-f])+
               Variable <- identifier
               Assign   < identifier "=" Expr
-			  FunCall  < identifier Primary
+              FunCall  < identifier Primary
               `));
 
-/* type exp = Int of BigInt | Div of exp * exp ; ... later: KPi of exp | sin of exp | Pow of exp * exp ... */
+/* type exp = Int of BigInt | Div of exp * exp | Real of real */
 
 interface Exp {
     real asReal();
@@ -43,10 +43,10 @@ BigInt z1 = BigInt(1);
 
 Exp match(alias intCase, alias divCase, alias realCase)(Exp x) 
 {
-	Int ix = cast(Int) x; if (ix) return intCase(ix);
-	Div dx = cast(Div) x; if (dx) return divCase(dx);
-	Real rx = cast(Real) x; if (rx) return realCase(rx);
-	throw new Exception("unknown type in Exp match");
+    Int ix = cast(Int) x; if (ix) return intCase(ix);
+    Div dx = cast(Div) x; if (dx) return divCase(dx);
+    Real rx = cast(Real) x; if (rx) return realCase(rx);
+    throw new Exception("unknown type in Exp match");
 }
 
 class Int : Exp {
@@ -55,23 +55,23 @@ class Int : Exp {
     BigInt asInt() { return v; }
     Exp mul(Exp x)
     {
-		return x.match!((Int ix) => new Int(v * ix.v),
-						(Div dx) => dx.mul(this),
-						(Real rx) => new Real(rx.asReal * this.asReal));
+        return x.match!((Int ix) => new Int(v * ix.v),
+                        (Div dx) => dx.mul(this),
+                        (Real rx) => new Real(rx.asReal * this.asReal));
     }
 
     Exp add(Exp x)
     {
-		return x.match!((Int ix) => new Int(v + ix.v), 
-						(Div dx) => dx.add(this),
-						(Real rx) => new Real(rx.asReal + this.asReal));
+        return x.match!((Int ix) => new Int(v + ix.v), 
+                        (Div dx) => dx.add(this),
+                        (Real rx) => new Real(rx.asReal + this.asReal));
     }
 
     this(string s) { v = BigInt(s); }
     this(BigInt x) { v = x; }
     this(int x)    { v = BigInt(x); }
-	this(long x)   { v = BigInt(x); }
-	
+    this(long x)   { v = BigInt(x); }
+    
     override string toString() { 
         string res;
         void f(const(char)[] s) { res ~= s; }
@@ -118,25 +118,25 @@ class Div : Exp {
 
     Exp mul(Exp x)
     {
-		return x.match!((Int ix) => div(a.mul(ix), b),
-						(Div dx) => div(a.mul(dx.a), b.mul(dx.b)),
-						(Real rx) => new Real(this.asReal * rx.asReal));
+        return x.match!((Int ix) => div(a.mul(ix), b),
+                        (Div dx) => div(a.mul(dx.a), b.mul(dx.b)),
+                        (Real rx) => new Real(this.asReal * rx.asReal));
     }
 
     Exp add(Exp x)
     {
         return x.match!(
-			(Int ix) => div(a.add(b.mul(x)), b),
-			(Div dx) { 
-				if (!dx.b.isInteger || !b.isInteger) 
-					throw new Exception("dunno how to add when denominator is not integer");
-				if (dx.b.asInt == b.asInt) return div(a.add(dx.a), b);
-				BigInt common = lcm(b.asInt, dx.b.asInt);
-				BigInt ak = common / b.asInt;
-				BigInt xk = common / dx.b.asInt;
-				return div( a.mul(new Int(ak)).add( dx.a.mul(new Int(xk)) ), new Int(common));            
-			},
-			(Real rx) => new Real(this.asReal + rx.asReal)); 
+            (Int ix) => div(a.add(b.mul(x)), b),
+            (Div dx) { 
+                if (!dx.b.isInteger || !b.isInteger) 
+                    throw new Exception("dunno how to add when denominator is not integer");
+                if (dx.b.asInt == b.asInt) return div(a.add(dx.a), b);
+                BigInt common = lcm(b.asInt, dx.b.asInt);
+                BigInt ak = common / b.asInt;
+                BigInt xk = common / dx.b.asInt;
+                return div( a.mul(new Int(ak)).add( dx.a.mul(new Int(xk)) ), new Int(common));            
+            },
+            (Real rx) => new Real(this.asReal + rx.asReal)); 
     }
 
 
@@ -160,9 +160,9 @@ protected:
         if (a.isInteger && a.asInt == z1 && !b.isInteger) { // 1 / (x/y) == y/x
             Div db = cast(Div) b;
             if (db) {
-				a = db.b;
-				b = db.a;
-			}
+                a = db.b;
+                b = db.a;
+            }
         }
         fixSigns();        
         if (a.isInteger && b.isInteger) {
@@ -189,30 +189,30 @@ protected:
 
 class Real : Exp
 {
-	real asReal() { return v; }
+    real asReal() { return v; }
     bool isInteger() { return false; }
     BigInt asInt() { throw new Exception("Real.asInt"); }
     override string toString() { return to!string(v); }
     string toStringPrecise() { return toString(); }
     Exp mul(Exp x) 
-	{ 
-		return x.match!((Int ix) => new Real(v * ix.asReal),
-						(Div dx) => new Real(v * dx.asReal),
-						(Real rx) => new Real(v * rx.v));
-	}
+    { 
+        return x.match!((Int ix) => new Real(v * ix.asReal),
+                        (Div dx) => new Real(v * dx.asReal),
+                        (Real rx) => new Real(v * rx.v));
+    }
 
     Exp add(Exp x)
-	{ 
-		return x.match!((Int ix) => new Real(v + ix.asReal),
-						(Div dx) => new Real(v + dx.asReal),
-						(Real rx) => new Real(v + rx.v));
-	}
+    { 
+        return x.match!((Int ix) => new Real(v + ix.asReal),
+                        (Div dx) => new Real(v + dx.asReal),
+                        (Real rx) => new Real(v + rx.v));
+    }
 
     Exp inPower(long n) { return new Real(v ^^ n); }
 
-	this(real x) { v = x; }
+    this(real x) { v = x; }
 protected:
-	real v;
+    real v;
 }
 
 BigInt gcd(BigInt a, BigInt b)
@@ -231,7 +231,7 @@ BigInt lcm(BigInt a, BigInt b) { return a * b / gcd(a,b); }
 
 Exp div(Exp a, Exp b)
 {
-	if (cast(Real) a !is null || cast(Real) b !is null) return new Real(a.asReal / b.asReal);
+    if (cast(Real) a !is null || cast(Real) b !is null) return new Real(a.asReal / b.asReal);
     Div d = new Div(a,b);
     if (d.isInteger) return new Int(d.asInt);
     return d;
@@ -249,20 +249,20 @@ Exp mkExp(string s)
 
 Exp binop(string op, Exp a, Exp b)
 {
-	if (op != "**") {
-		if (!a.isInteger)
-			throw new Exception("first arg of " ~op~ " must be integer");
-		if (!b.isInteger) 
-			throw new Exception("second arg of " ~op~ " must be integer");
-	}
-	switch(op) {
-		case "**": return b.isInteger ? a.inPower(b.asInt.toLong) : new Real(a.asReal ^^ b.asReal);
-		case "&":  return new Int(a.asInt.toLong & b.asInt.toLong);
-		case "|":  return new Int(a.asInt.toLong | b.asInt.toLong);
-		case "^":  return new Int(a.asInt.toLong ^ b.asInt.toLong);
-		case "%":  return new Int(a.asInt % b.asInt);
-		default: throw new Exception("unknown binary op " ~ op);
-	}
+    if (op != "**") {
+        if (!a.isInteger)
+            throw new Exception("first arg of " ~op~ " must be integer");
+        if (!b.isInteger) 
+            throw new Exception("second arg of " ~op~ " must be integer");
+    }
+    switch(op) {
+        case "**": return b.isInteger ? a.inPower(b.asInt.toLong) : new Real(a.asReal ^^ b.asReal);
+        case "&":  return new Int(a.asInt.toLong & b.asInt.toLong);
+        case "|":  return new Int(a.asInt.toLong | b.asInt.toLong);
+        case "^":  return new Int(a.asInt.toLong ^ b.asInt.toLong);
+        case "%":  return new Int(a.asInt % b.asInt);
+        default: throw new Exception("unknown binary op " ~ op);
+    }
 }
 
 Exp hex(Exp x)
@@ -297,14 +297,14 @@ alias funNames = TypeTuple!("sin", "cos", "tan", "asin", "acos", "atan", "exp");
 
 Exp funCall(string fn, Exp x)
 {
-	switch(fn) {
-		foreach(s; funNames) 
-			mixin("case \"" ~s~ "\" : return new Real(" ~s~ "(x.asReal));\n");
-		case "ln" : return new Real(log(x.asReal));
+    switch(fn) {
+        foreach(s; funNames) 
+            mixin("case \"" ~s~ "\" : return new Real(" ~s~ "(x.asReal));\n");
+        case "ln" : return new Real(log(x.asReal));
         case "hex": return hex(x);
         case "bin": return bin(x);
-		default: throw new Exception("unknown function " ~ fn);
-	}
+        default: throw new Exception("unknown function " ~ fn);
+    }
 }
 
 Exp[string] env;
@@ -348,7 +348,7 @@ Exp expr(ParseTree p)
                 writeln(p);
                 throw new Exception("bad number of args in Multip");                
             }
-		case "Arithmetic.FunCall":    return funCall(p.matches[0], expr(p.children[0]));
+        case "Arithmetic.FunCall":    return funCall(p.matches[0], expr(p.children[0]));
         default:
             writeln(p);
             throw new Exception("unknown parse node");            
@@ -357,7 +357,7 @@ Exp expr(ParseTree p)
 
 void showHelp()
 {
-	writeln("Examples:");
+    writeln("Examples:");
     writeln("6 + 6*6 - 23.1 ** (2/3)");
     writeln("x = 0xABCD ^ (21 & 31) | 0x80");
     writeln("hex it");
@@ -374,23 +374,23 @@ void main(string[] argv)
 {
     string line;
     env["Pi"] = new Real(PI);//mkExp("3.14159265");
-	writeln("Welcome to Precise Calculator. Enter expressions now. '?' for help.");
+    writeln("Welcome to Precise Calculator. Enter expressions now. '?' for help.");
     bool readLine() { write("> "); line = readln(); return line !is null; }
     while(readLine()) {
         line = strip(line);
         if (line.length == 0) break;
-		if (line=="?") { showHelp(); continue; }
+        if (line=="?") { showHelp(); continue; }
         auto pt = Arithmetic(line);
         if (pt.successful) {
-			try {
-				auto e = expr(pt);
-				if (e.isInteger) writeln("int: ", e);
-				else if (cast(Real) e) writeln("real: ", e);
-				else writeln("real: ", e.toString, " ratio: ", e.toStringPrecise);
-				env["it"] = e;
-			} catch (Exception ex) {
-				writeln("Error: ", ex.msg);
-			}
+            try {
+                auto e = expr(pt);
+                if (e.isInteger) writeln("int: ", e);
+                else if (cast(Real) e) writeln("real: ", e);
+                else writeln("real: ", e.toString, " ratio: ", e.toStringPrecise);
+                env["it"] = e;
+            } catch (Exception ex) {
+                writeln("Error: ", ex.msg);
+            }
         } else 
             writeln("parse failed");
     }
