@@ -7,14 +7,14 @@ Examples:
 
     6 + 6*6 - 23.1 ** (2/3)
     x = 0xABCD ^ (21 & 31) | 0x80
-    hex it  (displays last number as hex)
-    bin it  (displays it in binary)
+    hex x   (shows result in hex)
+    bin 42  (shows in binary)
     y = exp (1/x) + sin x
-    z = -1 ** it - y + ln 0.2
+    z = 2 ** it - y + ln 0.2   ('it' is a name for last result)
 
+    vars  (shows names of all defined variables so far)
     operators: +, -, *, /, % (mod), ^ (xor), & (and), ** (power)
     functions: bin hex ln sin cos tan asin acos atan exp
-    Empty line to quit.
 
 ### Technical details
 Written in D language. Built using DMD 2.064. Uses Pegged for parsing:

@@ -4,26 +4,26 @@ import pegged.grammar, std.string : strip;
 
 mixin(grammar(`
   Arithmetic:
-              Sentence < Assign / Expr
-              Expr     < Factor (Add / Sub)*
-              Add      < "+" Factor
-              Sub      < "-" Factor
-              Factor   < Multip (Mul / Div)*
-              Mul      < "*" Multip
-              Div      < "/" Multip
-              Multip   < PrimaryN (BinOp PrimaryN)?
-              BinOp    < "**" / "&" / "|" / "^" / "%"
-              PrimaryN < Neg / Primary
-              Primary  < Parens / HexNum / FloatNum / Number / FunCall / Variable
-              Parens   < :"(" Expr :")"
-              Neg      <- "-" Primary
-              Number   < ~([0-9]+)
-              FloatNum <- ~(Number "." Number)
-              HexNum   <~ "0x" ([0-9A-Fa-f])+
-              Variable <- identifier
-              Assign   < identifier "=" Expr
-              FunCall  < identifier Primary
-              `));
+    Sentence < Assign / Expr
+    Expr     < Factor (Add / Sub)*
+    Add      < "+" Factor
+    Sub      < "-" Factor
+    Factor   < Multip (Mul / Div)*
+    Mul      < "*" Multip
+    Div      < "/" Multip
+    Multip   < PrimaryN (BinOp PrimaryN)?
+    BinOp    < "**" / "&" / "|" / "^" / "%"
+    PrimaryN < Neg / Primary
+    Primary  < Parens / HexNum / FloatNum / Number / FunCall / Variable
+    Parens   < :"(" Expr :")"
+    Neg      <- "-" Primary
+    Number   < ~([0-9]+)
+    FloatNum <- ~(Number "." Number)
+    HexNum   <~ "0x" ([0-9A-Fa-f])+
+    Variable <- identifier
+    Assign   < identifier "=" Expr
+    FunCall  < identifier Primary
+`));
 
 /* type exp = Int of BigInt | Div of exp * exp | Real of real */
 
@@ -309,46 +309,48 @@ Exp funCall(string fn, Exp x)
 
 Exp[string] env;
 
-Exp expr(ParseTree p)
+Exp eval(ParseTree p)
 {
     switch (p.name)
     {
         case "Arithmetic.Expr":
             Exp v = new Int(0);
-            foreach(child; p.children) v = v.add(expr(child));
+            foreach(child; p.children) v = v.add(eval(child));
             return v;
         case "Arithmetic.Factor":
             Exp v = new Int(1);
-            foreach(child; p.children) v = v.mul( expr(child) );
+            foreach(child; p.children) v = v.mul( eval(child) );
             return v;
         case "Arithmetic.Number":
         case "Arithmetic.FloatNum": return mkExp(p.matches[0]);
         case "Arithmetic.HexNum": return new Int(p.matches[0]); 
-        case "Arithmetic.Sub": return expr(p.children[0]).mul(new Int(-1));
-        case "Arithmetic.Div": return div(new Int(1), expr(p.children[0]));
+        case "Arithmetic.Sub": return eval(p.children[0]).mul(new Int(-1));
+        case "Arithmetic.Div": return div(new Int(1), eval(p.children[0]));
         case "Arithmetic":     
         case "Arithmetic.Sentence": 
         case "Arithmetic.Primary":  
         case "Arithmetic.PrimaryN": 
         case "Arithmetic.Add": 
         case "Arithmetic.Mul": 
-        case "Arithmetic.Parens":   return expr(p.children[0]);
-        case "Arithmetic.Neg":      return expr(p.children[0]).mul(new Int(-1));
+        case "Arithmetic.Parens":   return eval(p.children[0]);
+        case "Arithmetic.Neg":      return eval(p.children[0]).mul(new Int(-1));
         case "Arithmetic.Assign": 
-            Exp e = expr(p.children[0]);
+            Exp e = eval(p.children[0]);
             env[p.matches[0]] = e;
             return e;
         case "Arithmetic.Variable":
-            if (p.matches[0] in env) return env[p.matches[0]];
-            writeln("Unknown variable: ", p.matches[0]);
+            auto var = p.matches[0];
+            if (var == "vars") writeln("variables: ", env.keys); 
+            else if (var in env) return env[var]; 
+            else writeln("Unknown variable: ", var);
             return new Int(0);
         case "Arithmetic.Multip":
-            if (p.children.length==1) return expr(p.children[0]); else
-            if (p.children.length==3) return binop(p.children[1].matches[0], expr(p.children[0]), expr(p.children[2])); else {
+            if (p.children.length==1) return eval(p.children[0]); else
+            if (p.children.length==3) return binop(p.children[1].matches[0], eval(p.children[0]), eval(p.children[2])); else {
                 writeln(p);
                 throw new Exception("bad number of args in Multip");                
             }
-        case "Arithmetic.FunCall":    return funCall(p.matches[0], expr(p.children[0]));
+        case "Arithmetic.FunCall":    return funCall(p.matches[0], eval(p.children[0]));
         default:
             writeln(p);
             throw new Exception("unknown parse node");            
@@ -360,10 +362,11 @@ void showHelp()
     writeln("Examples:");
     writeln("6 + 6*6 - 23.1 ** (2/3)");
     writeln("x = 0xABCD ^ (21 & 31) | 0x80");
-    writeln("hex it");
-    writeln("bin it");
+    writeln("hex x   (shows result in hex)");
+    writeln("bin 42  (shows in binary)");
     writeln("y = exp (1/x) + sin x");
-    writeln("z = -1 ** it - y + ln 0.2");
+    writeln("z = 2 ** it - y + ln 0.2   ('it' is a name for last result)");
+    writeln("vars  (shows names of all defined variables so far)");
     writeln("operators: +, -, *, /, % (mod), ^ (xor), & (and), ** (power)");
     write("functions: bin hex ln ");
     foreach(fn; funNames) write(fn, " ");
@@ -383,7 +386,7 @@ void main(string[] argv)
         auto pt = Arithmetic(line);
         if (pt.successful) {
             try {
-                auto e = expr(pt);
+                auto e = eval(pt);
                 if (e.isInteger) writeln("int: ", e);
                 else if (cast(Real) e) writeln("real: ", e);
                 else writeln("real: ", e.toString, " ratio: ", e.toStringPrecise);
