@@ -4,15 +4,17 @@ When possible performs calculations using unlimited precision rational numbers.
 Otherwise falls back to 80-bit reals. Supports variables and some functions.
 
 Examples:
-6 + 6*6 - 23.1 ** (2/3)
-x = 0xABCD ^ (21 & 31) | 0x80
-hex it  (displays last number as hex)
-bin it  (displays it in binary)
-y = exp (1/x) + sin x
-z = -1 ** it - y + ln 0.2
-operators: +, -, *, /, % (mod), ^ (xor), & (and), ** (power)
-functions: bin hex ln sin cos tan asin acos atan exp
-Empty line to quit.
+
+    6 + 6*6 - 23.1 ** (2/3)
+    x = 0xABCD ^ (21 & 31) | 0x80
+    hex it  (displays last number as hex)
+    bin it  (displays it in binary)
+    y = exp (1/x) + sin x
+    z = -1 ** it - y + ln 0.2
+
+    operators: +, -, *, /, % (mod), ^ (xor), & (and), ** (power)
+    functions: bin hex ln sin cos tan asin acos atan exp
+    Empty line to quit.
 
 ### Technical details
 Written in D language. Built using DMD 2.064. Uses Pegged for parsing:
