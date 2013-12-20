@@ -279,16 +279,35 @@ string[] add01(string[] ss) { return chain(ss.map!(s => "0" ~ s), ss.map!(s => "
 
 Exp bin(Exp x)
 {
-    string[] binStrings = ["0","1"].add01.add01.add01;    
-    string[char] bins = ['_':""];
-    foreach(i,c; "0123456789ABCDEF")
-        bins[c] = binStrings[i];
-    if (x.isInteger) {
+    if (x.isInteger) {        
+        string[] binStrings = ["0","1"].add01.add01.add01;    
+        string[char] bins = ['_':""];
+        foreach(i,c; "0123456789ABCDEF")
+            bins[c] = binStrings[i];
         string res, sign = (x.asInt < 0) ? "-" : "";
         abs(x.asInt).toString((s) {res ~= s;}, "%X");                 
         write("bin(",x,") = ", sign);
         foreach(c; res) write(bins[c]);
         writeln();
+    }
+    return x;
+}
+
+Exp factors(Exp x)
+{
+    if (x.isInteger) {
+        auto wheel = [4,2,4,2,4,6,2,6].map!(i => BigInt(i)).array.cycle;
+        BigInt nxt() { BigInt t = wheel.front; wheel.popFront(); return t; }
+        auto possible_primes = chain([BigInt(2),BigInt(3),BigInt(5)], recurrence!((a,n) => a.front + nxt())(BigInt(7)));
+        auto X = x.asInt;
+        BigInt[] res;
+        foreach(n; possible_primes.until!(x => x > X)) {
+            while(X % n == z0) {
+                res ~= n;
+                X /= n;
+            }
+        }        
+        writeln("factors: ", res);
     }
     return x;
 }
@@ -303,6 +322,7 @@ Exp funCall(string fn, Exp x)
         case "ln" : return new Real(log(x.asReal));
         case "hex": return hex(x);
         case "bin": return bin(x);
+        case "factors" : return factors(x);
         default: throw new Exception("unknown function " ~ fn);
     }
 }
@@ -368,7 +388,7 @@ void showHelp()
     writeln("z = 2 ** it - y + ln 0.2   ('it' is a name for last result)");
     writeln("vars  (shows names of all defined variables so far)");
     writeln("operators: +, -, *, /, % (mod), ^ (xor), & (and), ** (power)");
-    write("functions: bin hex ln ");
+    write("functions: bin hex factors ln ");
     foreach(fn; funNames) write(fn, " ");
     writeln("\nEmpty line to quit.");
 }
