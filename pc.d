@@ -301,12 +301,13 @@ Exp factors(Exp x)
         auto possible_primes = chain([BigInt(2),BigInt(3),BigInt(5)], recurrence!((a,n) => a.front + nxt())(BigInt(7)));
         auto X = x.asInt;
         BigInt[] res;
-        foreach(n; possible_primes.until!(x => x > X)) {
+        foreach(n; possible_primes.until!(x => x*x > X)) {
             while(X % n == z0) {
                 res ~= n;
                 X /= n;
             }
-        }        
+        }    
+		if (X > z1) res ~= X;
         writeln("factors: ", res);
     }
     return x;
