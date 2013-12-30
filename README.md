@@ -14,7 +14,7 @@ Examples:
     factors 111111
     vars  (shows names of all defined variables so far)
 
-    operators: +, -, *, /, % (mod), ^ (xor), & (and), ** (power)
+    operators: +, -, *, /, % (mod), ^ (xor), & (and), | (or), ** (power)
     functions: bin hex ln factors sin cos tan asin acos atan exp
 
 ### Technical details

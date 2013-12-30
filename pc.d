@@ -388,7 +388,7 @@ void showHelp()
     writeln("y = exp (1/x) + sin x");
     writeln("z = 2 ** it - y + ln 0.2   ('it' is a name for last result)");
     writeln("vars  (shows names of all defined variables so far)");
-    writeln("operators: +, -, *, /, % (mod), ^ (xor), & (and), ** (power)");
+    writeln("operators: +, -, *, /, % (mod), ^ (xor), & (and), | (or), ** (power)");
     write("functions: bin hex factors ln ");
     foreach(fn; funNames) write(fn, " ");
     writeln("\nEmpty line to quit.");
