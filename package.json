@@ -1,0 +1,11 @@
+{
+	"name": "pc",
+	"description": "Precise console calculator.",
+	"copyright": "Copyright (C) 2013 Dmitry Popov, Infognition Co. Ltd.",
+	"authors": ["Dmitry Popov"],
+	"license": "MIT",
+	"targetType": "executable",
+	"dependencies": {
+		"pegged": "~master"
+	}
+}

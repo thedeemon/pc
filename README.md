@@ -21,6 +21,12 @@ Examples:
 Written in D language. Built using DMD 2.064. Uses Pegged for parsing:
 <https://github.com/PhilippeSigaud/Pegged/>
 
+### Building
+Using DUB: get the files, cd to the project folder, 
+run: `dub build --build=release`
+
+It will get the dependecies automatically and build the target executable.
+
 ### License
 Copyright (C) 2013 Dmitry Popov, Infognition Co. Ltd.
 

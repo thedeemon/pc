@@ -1,0 +1,8 @@
+syntax: glob
+*.ncb
+*.plg
+*.bsc
+*.pch
+*.suo
+*.exe
+.dub/*
