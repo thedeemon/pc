@@ -16,6 +16,8 @@ Examples:
 
     operators: +, -, *, /, % (mod), ^ (xor), & (and), | (or), ** (power)
     functions: bin hex ln factors sin cos tan asin acos atan exp
+    :f or :full - show many digits of reals
+    :s or :short - show shorter version of reals
 
 ### Technical details
 Written in D language. Built using DMD 2.064. Uses Pegged for parsing:

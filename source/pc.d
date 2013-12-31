@@ -1,6 +1,6 @@
 module main;
 import std.stdio, std.range, std.algorithm, std.conv, std.typecons, std.bigint, std.exception, std.math, std.typetuple;
-import pegged.grammar, std.string : strip;
+import pegged.grammar, std.string : strip, format;
 
 mixin(grammar(`
   Arithmetic:
@@ -92,6 +92,11 @@ protected:
     BigInt v;
 }
 
+enum FloatMode { Short, Full }
+FloatMode fmode = FloatMode.Short;
+string showReal(real v) { return fmode==FloatMode.Short ? v.to!string : format("%.25g", v); }
+
+
 class Div : Exp {
     real asReal() 
     { 
@@ -111,7 +116,7 @@ class Div : Exp {
     override string toString() 
     { 
         if (this.isInteger) return a.toString();
-        return to!string(asReal());
+        return asReal.showReal;
     }
 
     string toStringPrecise() { return "(" ~ a.toStringPrecise ~ "/" ~ b.toStringPrecise ~ ")"; }
@@ -187,12 +192,13 @@ protected:
     }
 }
 
+
 class Real : Exp
 {
     real asReal() { return v; }
     bool isInteger() { return false; }
     BigInt asInt() { throw new Exception("Real.asInt"); }
-    override string toString() { return to!string(v); }
+    override string toString() { return v.showReal; }
     string toStringPrecise() { return toString(); }
     Exp mul(Exp x) 
     { 
@@ -391,7 +397,9 @@ void showHelp()
     writeln("operators: +, -, *, /, % (mod), ^ (xor), & (and), | (or), ** (power)");
     write("functions: bin hex factors ln ");
     foreach(fn; funNames) write(fn, " ");
-    writeln("\nEmpty line to quit.");
+    writeln("\n:f or :full - show many digits of reals");
+    writeln(":s or :short - show shorter version of reals");
+    writeln("Empty line to quit.");
 }
 
 void main(string[] argv)
@@ -404,6 +412,8 @@ void main(string[] argv)
         line = strip(line);
         if (line.length == 0) break;
         if (line=="?") { showHelp(); continue; }
+        if (line[0..2] == ":f") { fmode = FloatMode.Full; writeln("full mode set"); continue; }
+        if (line[0..2] == ":s") { fmode = FloatMode.Short; writeln("short mode set"); continue; }
         auto pt = Arithmetic(line);
         if (pt.successful) {
             try {
