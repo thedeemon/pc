@@ -305,7 +305,7 @@ Exp factors(Exp x)
         auto wheel = [4,2,4,2,4,6,2,6].map!(i => BigInt(i)).array.cycle;
         BigInt nxt() { BigInt t = wheel.front; wheel.popFront(); return t; }
         auto possible_primes = chain([BigInt(2),BigInt(3),BigInt(5)], recurrence!((a,n) => a.front + nxt())(BigInt(7)));
-        auto X = x.asInt;
+        auto X = x.asInt.abs;
         BigInt[] res;
         foreach(n; possible_primes.until!(x => x*x > X)) {
             while(X % n == z0) {
