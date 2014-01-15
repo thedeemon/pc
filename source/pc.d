@@ -402,30 +402,37 @@ void showHelp()
     writeln("Empty line to quit.");
 }
 
+void process(string line)
+{
+	if (line=="?") return showHelp();
+	if (line[0..2] == ":f") { fmode = FloatMode.Full; return writeln("full mode set"); }
+	if (line[0..2] == ":s") { fmode = FloatMode.Short; return writeln("short mode set"); }
+	auto pt = Arithmetic(line);
+	if (pt.successful) {
+		try {
+			auto e = eval(pt);
+			if (e.isInteger) writeln("int: ", e);
+			else if (cast(Real) e) writeln("real: ", e);
+			else writeln("real: ", e.toString, " ratio: ", e.toStringPrecise);
+			env["it"] = e;
+		} catch (Exception ex) {
+			writeln("Error: ", ex.msg);
+		}
+	} else 
+		writeln("parse failed");
+}
+
 void main(string[] argv)
 {
     string line;
     env["Pi"] = new Real(PI);//mkExp("3.14159265");
+	if (argv.length > 1) 
+		return process(argv[1..$].join(" "));
     writeln("Welcome to Precise Calculator. Enter expressions now. '?' for help.");
     bool readLine() { write("> "); line = readln(); return line !is null; }
     while(readLine()) {
         line = strip(line);
         if (line.length == 0) break;
-        if (line=="?") { showHelp(); continue; }
-        if (line[0..2] == ":f") { fmode = FloatMode.Full; writeln("full mode set"); continue; }
-        if (line[0..2] == ":s") { fmode = FloatMode.Short; writeln("short mode set"); continue; }
-        auto pt = Arithmetic(line);
-        if (pt.successful) {
-            try {
-                auto e = eval(pt);
-                if (e.isInteger) writeln("int: ", e);
-                else if (cast(Real) e) writeln("real: ", e);
-                else writeln("real: ", e.toString, " ratio: ", e.toStringPrecise);
-                env["it"] = e;
-            } catch (Exception ex) {
-                writeln("Error: ", ex.msg);
-            }
-        } else 
-            writeln("parse failed");
+		process(line);
     }
 }
