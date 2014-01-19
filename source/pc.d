@@ -247,7 +247,7 @@ Exp mkExp(string s)
 {
     auto dot = s.countUntil('.');
     if (dot < 0) return new Int(s);
-    int nAfterDot = s.length - dot - 1;
+    auto nAfterDot = s.length - dot - 1;
     Exp num = new Int(s[0..dot] ~ s[dot+1..$]);
     Exp den = new Int(BigInt(10) ^^ nAfterDot);
     return new Div(num, den);
