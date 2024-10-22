@@ -20,7 +20,7 @@ Examples:
     :s or :short - show shorter version of reals
 
 ### Technical details
-Written in D language. Built using DMD 2.064. Uses Pegged for parsing:
+Written in D language. Uses Pegged for parsing:
 <https://github.com/PhilippeSigaud/Pegged/>
 
 ### Building
