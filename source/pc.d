@@ -74,8 +74,7 @@ class Int : Exp {
     
     override string toString() { 
         string res;
-        void f(const(char)[] s) { res ~= s; }
-        v.toString(&f, "%d"); 
+        v.toString((s){ res ~= s; }, "%d"); 
         return res;
     }
 
